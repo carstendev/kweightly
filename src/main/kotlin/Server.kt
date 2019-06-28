@@ -11,7 +11,6 @@ import service.WeightService
 object App {
 
     operator fun invoke(cfg: Config, db: Database): Http4kK8sServer {
-        // define the main app API - it proxies to the "other" service
         val weightHandler = WeightService(WeightRepository(db))
         val weightApp = SunHttp(cfg.serverConfig.servicePort).toServer(weightHandler)
         val healthApp = SunHttp(cfg.serverConfig.healthPort).toServer(HealthService(cfg))
