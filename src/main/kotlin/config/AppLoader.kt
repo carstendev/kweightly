@@ -12,7 +12,7 @@ import java.util.*
 
 data class DatabaseConfig(val driver: String, val url: String, val user: String, val password: Optional<Secret>)
 data class ServerConfig(val host: String, val servicePort: Int, val healthPort: Int)
-data class AuthConfig(val secret: Secret, val issuer: String)
+data class AuthConfig(val jwksLocation: String, val issuer: String, val audience: String)
 data class Config(val serverConfig: ServerConfig, val dbConfig: DatabaseConfig, val authConfig: AuthConfig)
 
 object ServerSpec : ConfigSpec("server") {
@@ -29,8 +29,9 @@ object DatabaseSpec : ConfigSpec("database") {
 }
 
 object AuthSpec : ConfigSpec("auth") {
-    val secret by required<String>()
+    val jwksLocation by required<String>()
     val issuer by required<String>()
+    val audience by required<String>()
 }
 
 /**
@@ -41,10 +42,7 @@ object AppLoader {
 
     fun tokenAuthService(cfg: AuthConfig): TokenAuthService {
         return TokenAuthService(
-            JWT(
-                cfg.secret,
-                cfg.issuer
-            )
+            JWT(cfg)
         )
     }
 
@@ -66,6 +64,7 @@ object AppLoader {
         val config = com.uchuhimo.konf.Config()
         config.addSpec(ServerSpec)
         config.addSpec(DatabaseSpec)
+        config.addSpec(AuthSpec)
         return config.from.hocon.resource(configPath)
     }
 
@@ -85,10 +84,11 @@ object AppLoader {
                 password = if (pw.isEmpty()) Optional.empty() else Optional.of(Secret(pw))
             ),
             AuthConfig(
-                secret = Secret(configSet[AuthSpec.secret]),
-                issuer = configSet[AuthSpec.issuer]
+                jwksLocation = configSet[AuthSpec.jwksLocation],
+                issuer = configSet[AuthSpec.issuer],
+                audience = configSet[AuthSpec.audience]
             )
         )
-        return appConfig;
+        return appConfig
     }
 }

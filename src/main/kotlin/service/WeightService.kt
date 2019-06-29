@@ -7,6 +7,7 @@ import org.http4k.core.*
 import org.http4k.format.Jackson.auto
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import org.jose4j.jwt.JwtClaims
 
 
 object WeightService {
@@ -17,8 +18,8 @@ object WeightService {
     operator fun invoke(weightRepo: WeightRepository, authFilter: AuthFilter): HttpHandler {
 
         val getHandler: HttpHandler = authFilter.then { request ->
-            val userId = request.header("x-user-id")
-            userId?.let { userId ->
+            val claims = JwtClaims.parse(request.header("x-jwt-claims"))
+            claims.subject?.let { userId ->
                 weightLens(
                     weightRepo.findAllByUserId(userId),
                     Response(Status.OK).header("Content-Type", ContentType.APPLICATION_JSON.value)
@@ -27,8 +28,8 @@ object WeightService {
         }
 
         val postHandler: HttpHandler = authFilter.then { request ->
-            val userId = request.header("x-user-id")
-            userId?.let { userId ->
+            val claims = JwtClaims.parse(request.header("x-jwt-claims"))
+            claims.subject?.let { userId ->
                 val newWeight = saveWeightLens(request)
                 val newId = weightRepo.insert(newWeight, userId)
                 Response(Status.OK).body(newId.toString())
@@ -36,8 +37,8 @@ object WeightService {
         }
 
         return routes(
-            "/api/user/{userId}/weights" bind Method.GET to getHandler,
-            "/api/user/{userId}/weights" bind Method.POST to postHandler
+            "/api/user/weights" bind Method.GET to getHandler,
+            "/api/user/weights" bind Method.POST to postHandler
         )
 
     }

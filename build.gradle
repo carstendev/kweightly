@@ -28,7 +28,7 @@ dependencies {
     compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.0'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
-    implementation 'com.auth0:java-jwt:3.8.1'
+    compile group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5'
 }
 
 compileKotlin {
