@@ -22,11 +22,13 @@ dependencies {
     compile 'com.uchuhimo:konf:0.13.3' // config loading
 
     compile 'org.jetbrains.exposed:exposed:0.15.1' // database access
+    compile "com.h2database:h2:1.4.197"
+    compile "org.postgresql:postgresql:42.2.2"
 
-    implementation 'com.google.code.gson:gson:2.8.5' // json handling
+    compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.0'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.26'
-    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.26'
+    implementation 'com.auth0:java-jwt:3.8.1'
 }
 
 compileKotlin {

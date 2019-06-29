@@ -3,17 +3,15 @@ package database
 
 import model.SaveWeight
 import model.Weight
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.statements.StatementContext
+import org.jetbrains.exposed.sql.statements.expandArgs
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.*
-
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -25,6 +23,14 @@ object WeightTable : Table() {
     val comment = varchar("comment", length = 255).nullable()
 }
 
+object SqlLog : SqlLogger {
+    val logger = LoggerFactory.getLogger("sql")
+
+    override fun log (context: StatementContext, transaction: Transaction) {
+        logger.debug("SQL: ${context.expandArgs(transaction)}")
+    }
+}
+
 class WeightRepository(private val db: Database) {
 
     val timeZone: DateTimeZone = DateTimeZone.forID("Europe/Berlin")
@@ -32,6 +38,7 @@ class WeightRepository(private val db: Database) {
 
     fun insert(newWeight: SaveWeight, userId: String): Long {
         return transaction(db) {
+            addLogger(SqlLog)
             WeightTable.insert {
                 it[WeightTable.userId] = userId
                 it[recordedAt] = DateTime.now(timeZone) // save with german tz info
@@ -43,6 +50,7 @@ class WeightRepository(private val db: Database) {
 
     fun findAllByUserId(userId: String): List<Weight> {
         return transaction(db) {
+            addLogger(SqlLog)
             WeightTable
                 .select(WeightTable.userId eq userId)
                 .map { row ->
@@ -54,7 +62,7 @@ class WeightRepository(private val db: Database) {
                             zoneId
                         ),
                         weight = row[WeightTable.weight],
-                        comment = Optional.ofNullable(row[WeightTable.comment])
+                        comment = row[WeightTable.comment]
                     )
                 }
         }

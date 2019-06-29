@@ -14,5 +14,5 @@ data class Weight(
     val userId: String,
     val recordedAt: LocalDateTime,
     val weight: BigDecimal,
-    val comment: Optional<String>
+    val comment: String?
 )

@@ -1,19 +1,19 @@
 import config.Config
 import config.AppLoader
-import config.DatabaseConfig
 import database.WeightRepository
 import org.http4k.cloudnative.Http4kK8sServer
 import org.http4k.server.SunHttp
 import org.jetbrains.exposed.sql.Database
-import service.HealthService
-import service.WeightService
+import service.*
 
 object App {
 
     operator fun invoke(cfg: Config, db: Database): Http4kK8sServer {
-        val weightHandler = WeightService(WeightRepository(db))
+
+        val authFilter = AuthFilter(AppLoader.tokenAuthService(cfg.authConfig))
+        val weightHandler = WeightService(WeightRepository(db), authFilter)
         val weightApp = SunHttp(cfg.serverConfig.servicePort).toServer(weightHandler)
-        val healthApp = SunHttp(cfg.serverConfig.healthPort).toServer(HealthService(cfg))
+        val healthApp = SunHttp(cfg.serverConfig.healthPort).toServer(HealthService(cfg, db))
 
         return Http4kK8sServer(weightApp, healthApp)
     }
