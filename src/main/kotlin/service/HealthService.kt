@@ -1,10 +1,7 @@
 package service
 
 import config.Config
-import org.http4k.cloudnative.health.Completed
-import org.http4k.cloudnative.health.Health
-import org.http4k.cloudnative.health.ReadinessCheck
-import org.http4k.cloudnative.health.ReadinessCheckResult
+import org.http4k.cloudnative.health.*
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Response
@@ -32,11 +29,10 @@ object HealthService {
 class DatabaseCheck(private val db: Database) : ReadinessCheck {
     override val name = "database"
     override fun invoke(): ReadinessCheckResult {
-        transaction(db) {
-            exec("select 1;") { r -> //TODO: use arrow -> Try here
-                r
-            }
-        }
-        return Completed(name)
+        return transaction(db) {
+            exec("select 1;") { Completed(name) }
+        } ?: Failed(name, DatabaseCheckException("Could not reach db!"))
     }
 }
+
+class DatabaseCheckException(msg: String) : Exception(msg)

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import service.JWT
 import service.TokenAuthService
+import service.TokenAuthServiceImpl
 import java.util.*
 
 data class DatabaseConfig(val driver: String, val url: String, val user: String, val password: Optional<Secret>)
@@ -41,12 +42,12 @@ object AuthSpec : ConfigSpec("auth") {
 object AppLoader {
 
     fun tokenAuthService(cfg: AuthConfig): TokenAuthService {
-        return TokenAuthService(
+        return TokenAuthServiceImpl(
             JWT(cfg)
         )
     }
 
-    fun createDatabase(cfg: DatabaseConfig): Database {
+    fun loadDatabase(cfg: DatabaseConfig): Database {
         val db = Database.connect( // TODO: use connection pool (hikari)
             url = cfg.url,
             driver = cfg.driver,
@@ -71,7 +72,7 @@ object AppLoader {
     operator fun invoke(configPath: String): Config {
         val configSet = buildConfig(configPath)
         val pw = configSet[DatabaseSpec.password]
-        val appConfig = Config(
+        return Config(
             ServerConfig(
                 host = configSet[ServerSpec.host],
                 servicePort = configSet[ServerSpec.servicePort],
@@ -89,6 +90,5 @@ object AppLoader {
                 audience = configSet[AuthSpec.audience]
             )
         )
-        return appConfig
     }
 }

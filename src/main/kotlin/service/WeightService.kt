@@ -15,25 +15,30 @@ object WeightService {
     val weightLens = Body.auto<List<Weight>>().toLens()
     val saveWeightLens = Body.auto<SaveWeight>().toLens()
 
+    private inline fun handleWithClaims(request: HttpMessage, handler: (claims: JwtClaims) -> Response): Response {
+        val claims = JwtClaims.parse(request.header("x-jwt-claims"))
+        return claims?.let {
+            handler(it)
+        } ?: Response(Status.UNAUTHORIZED)
+    }
+
     operator fun invoke(weightRepo: WeightRepository, authFilter: AuthFilter): HttpHandler {
 
         val getHandler: HttpHandler = authFilter.then { request ->
-            val claims = JwtClaims.parse(request.header("x-jwt-claims"))
-            claims.subject?.let { userId ->
+            handleWithClaims(request) { claims ->
                 weightLens(
-                    weightRepo.findAllByUserId(userId),
+                    weightRepo.findAllByUserId(claims.subject),
                     Response(Status.OK).header("Content-Type", ContentType.APPLICATION_JSON.value)
                 )
-            } ?: Response(Status.UNAUTHORIZED)
+            }
         }
 
         val postHandler: HttpHandler = authFilter.then { request ->
-            val claims = JwtClaims.parse(request.header("x-jwt-claims"))
-            claims.subject?.let { userId ->
+            handleWithClaims(request) { claims ->
                 val newWeight = saveWeightLens(request)
-                val newId = weightRepo.insert(newWeight, userId)
+                val newId = weightRepo.insert(newWeight, claims.subject)
                 Response(Status.OK).body(newId.toString())
-            } ?: Response(Status.UNAUTHORIZED)
+            }
         }
 
         return routes(

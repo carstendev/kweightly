@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.statements.expandArgs
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDateTime
@@ -24,7 +25,7 @@ object WeightTable : Table() {
 }
 
 object SqlLog : SqlLogger {
-    val logger = LoggerFactory.getLogger("sql")
+    private val logger: Logger = LoggerFactory.getLogger("sql")
 
     override fun log (context: StatementContext, transaction: Transaction) {
         logger.debug("SQL: ${context.expandArgs(transaction)}")
@@ -33,8 +34,8 @@ object SqlLog : SqlLogger {
 
 class WeightRepository(private val db: Database) {
 
-    val timeZone: DateTimeZone = DateTimeZone.forID("Europe/Berlin")
-    val zoneId = ZoneId.of("Europe/Berlin")
+    private val timeZone: DateTimeZone = DateTimeZone.forID("Europe/Berlin")
+    private val zoneId = ZoneId.of("Europe/Berlin")
 
     fun insert(newWeight: SaveWeight, userId: String): Long {
         return transaction(db) {

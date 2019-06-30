@@ -18,27 +18,30 @@ class AuthFilter(private val authService: TokenAuthService) : Filter {
         it.header("Authorization")?.let { token ->
             authService.authorize(token)?.let { decodedToken ->
                 next(it.header("x-jwt-claims", decodedToken.jwtClaims.toJson()))
-            }
+            } ?: Response(Status.UNAUTHORIZED)
         } ?: Response(Status.UNAUTHORIZED)
     }
 }
 
-class TokenAuthService(private val jwt: JWT) {
-    fun authorize(token: String): JwtContext? {
-        return jwt.verify(token) ?: return null
-    }
+interface TokenAuthService {
+    fun authorize(token: String): JwtContext?
 }
 
+class TokenAuthServiceImpl(private val jwt: JWT) : TokenAuthService {
+    override fun authorize(token: String): JwtContext? {
+        return jwt.verify(token)
+    }
+}
 
 class JWT(private val cfg: AuthConfig) {
     private val log = LoggerFactory.getLogger("application")
 
     fun verify(token: String): JwtContext? {
-        try {
-            return verifier.process(token.split(" ").last()) // remove Bearer prefix
+        return try {
+            verifier.process(token.split(" ").last()) // remove Bearer prefix
         } catch (e: InvalidJwtException) {
             log.info("Unable to verify JWT token", e)
-            return null
+            null
         }
     }
 
