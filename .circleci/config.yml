@@ -1,0 +1,8 @@
+orbs:
+  docker: circleci/docker@x.y.z
+version: 2.1
+workflows:
+  build-and-publish-docker-image:
+    jobs:
+      - docker/publish:
+          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
