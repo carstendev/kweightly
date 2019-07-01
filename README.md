@@ -1,5 +1,4 @@
-Build [![CircleCI](https://circleci.com/gh/carstendev/kweightly/tree/master.svg?style=svg)](https://circleci.com/gh/carstendev/kweightly/tree/master)
-# kweightly
+# kweightly [![CircleCI](https://circleci.com/gh/carstendev/kweightly/tree/master.svg?style=svg)](https://circleci.com/gh/carstendev/kweightly/tree/master)
 Weight tracking backend written in Kotlin
 
 ## Goal
