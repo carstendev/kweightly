@@ -1,6 +1,7 @@
 package service
 
 import config.AuthConfig
+import org.apache.logging.log4j.kotlin.logger
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Response
@@ -11,7 +12,6 @@ import org.jose4j.jwt.consumer.InvalidJwtException
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.jwt.consumer.JwtContext
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
-import org.slf4j.LoggerFactory
 
 class AuthFilter(private val authService: TokenAuthService) : Filter {
     override fun invoke(next: HttpHandler): HttpHandler = {
@@ -34,7 +34,7 @@ class TokenAuthServiceImpl(private val jwt: JWT) : TokenAuthService {
 }
 
 class JWT(private val cfg: AuthConfig) {
-    private val log = LoggerFactory.getLogger("application")
+    private val log = logger()
 
     fun verify(token: String): JwtContext? {
         return try {

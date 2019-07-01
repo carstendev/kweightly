@@ -21,6 +21,6 @@ object App {
 
 fun main() {
     val cfg = AppLoader("application.conf")
-    val db = AppLoader.loadDatabase(cfg.dbConfig)
+    val db = AppLoader.migrateDatabase(cfg.dbConfig)
     App(cfg, db).start().block()
 }

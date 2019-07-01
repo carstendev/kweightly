@@ -1,11 +1,9 @@
 package config
 
 import com.uchuhimo.konf.ConfigSpec
-import database.WeightTable
+import org.flywaydb.core.Flyway
 import org.http4k.cloudnative.env.Secret
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import service.JWT
 import service.TokenAuthService
 import service.TokenAuthServiceImpl
@@ -47,18 +45,21 @@ object AppLoader {
         )
     }
 
-    fun loadDatabase(cfg: DatabaseConfig): Database {
-        val db = Database.connect( // TODO: use connection pool (hikari)
+    fun migrateDatabase(cfg: DatabaseConfig): Database {
+        //val cl = Class.forName(cfg.driver).classLoader
+        val password = cfg.password.map { secret -> secret.use { pw -> pw } }.orElse("")
+        Flyway.configure().dataSource(
+            cfg.url,
+            cfg.user,
+            password
+        ).load().migrate()
+
+        return Database.connect( // TODO: use connection pool (hikari)
             url = cfg.url,
             driver = cfg.driver,
             user = cfg.user,
-            password = cfg.password.map { secret -> secret.use { pw -> pw } }.orElse("")
-
+            password = password
         )
-        transaction(db) {
-            SchemaUtils.create(WeightTable)
-        }
-        return db
     }
 
     private fun buildConfig(configPath: String): com.uchuhimo.konf.Config {

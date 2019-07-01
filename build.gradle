@@ -22,11 +22,15 @@ dependencies {
     compile 'com.uchuhimo:konf:0.13.3' // config loading
 
     compile 'org.jetbrains.exposed:exposed:0.15.1' // database access
-    compile "com.h2database:h2:1.4.197"
+    compile "com.h2database:h2:1.4.199"
     compile "org.postgresql:postgresql:42.2.2"
 
-    compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.0'
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    compile group: 'org.flywaydb', name: 'flyway-core', version: '6.0.0-beta2' // db migrations
+
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j18-impl', version: '2.12.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api-kotlin', version: '1.0.0'
 
     compile group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5'
 }
