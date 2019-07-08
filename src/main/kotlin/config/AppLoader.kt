@@ -1,6 +1,8 @@
 package config
 
+import com.typesafe.config.ConfigFactory
 import com.uchuhimo.konf.ConfigSpec
+import com.uchuhimo.konf.source.hocon.HoconSource
 import org.flywaydb.core.Flyway
 import org.http4k.cloudnative.env.Secret
 import org.jetbrains.exposed.sql.Database
@@ -67,7 +69,9 @@ object AppLoader {
         config.addSpec(ServerSpec)
         config.addSpec(DatabaseSpec)
         config.addSpec(AuthSpec)
-        return config.from.hocon.resource(configPath)
+
+        val source = HoconSource(ConfigFactory.parseResources(configPath).resolve().root()) //TODO: report bug back to konf!
+        return config.from.hocon.config.withSource(source)
     }
 
     operator fun invoke(configPath: String): Config {
