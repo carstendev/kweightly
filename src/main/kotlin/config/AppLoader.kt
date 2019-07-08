@@ -60,7 +60,6 @@ object AppLoader {
         ).load().migrate()
 
         val hikariCfg = HikariConfig()
-        hikariCfg.driverClassName = cfg.driver
         hikariCfg.jdbcUrl = cfg.url
         hikariCfg.username = cfg.user
         hikariCfg.password = password
