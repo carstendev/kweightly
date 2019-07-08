@@ -40,8 +40,8 @@ object WeightService {
                 Optional.ofNullable(request.path("id"))
                     .flatMap { Optional.ofNullable(it.toLongOrNull()) }
                     .map {
-                        val result = weightRepo.delete(it, claims.subject)
-                        Response(Status.OK).body(result.toString())
+                        weightRepo.delete(it, claims.subject)
+                        Response(Status.NO_CONTENT)
                     }.orElse(Response(Status.BAD_REQUEST))
             }
         }
@@ -55,9 +55,9 @@ object WeightService {
         }
 
         return routes(
-            "/api/user/weights" bind Method.GET to getHandler,
-            "/api/user/weights/{id}" bind Method.DELETE to deleteHandler,
-            "/api/user/weights" bind Method.POST to postHandler
+            "/api/weights" bind Method.GET to getHandler,
+            "/api/weights/{id}" bind Method.DELETE to deleteHandler,
+            "/api/weights" bind Method.POST to postHandler
         )
 
     }
