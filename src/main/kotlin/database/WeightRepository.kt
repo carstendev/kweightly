@@ -7,6 +7,8 @@ import org.apache.logging.log4j.kotlin.Logging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import java.time.Instant
 
 object WeightTable : Table() {
@@ -26,6 +28,29 @@ class WeightRepository(private val db: Database) : Logging {
                 it[weight] = newWeight.weight
                 it[comment] = newWeight.comment
             } get WeightTable.id
+        }
+    }
+
+    fun upsert(weightToUpsert: Weight): Long {
+        return transaction(db) {
+            if (WeightTable.select(WeightTable.id eq weightToUpsert.id).empty()) {
+
+                WeightTable.insert {
+                    it[id] = weightToUpsert.id
+                    it[userId] = weightToUpsert.userId
+                    it[weight] = weightToUpsert.weight
+                    it[recordedAt] = DateTime(weightToUpsert.recordedAt.toEpochMilli(), DateTimeZone.UTC)
+                    it[comment] = weightToUpsert.comment
+                } get WeightTable.id
+
+            } else {
+                WeightTable.update({ WeightTable.id eq weightToUpsert.id }) {
+                    it[weight] = weightToUpsert.weight
+                    it[recordedAt] = DateTime(weightToUpsert.recordedAt.toEpochMilli(), DateTimeZone.UTC)
+                    it[comment] = weightToUpsert.comment
+                }
+                weightToUpsert.id
+            }
         }
     }
 

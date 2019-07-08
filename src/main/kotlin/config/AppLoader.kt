@@ -3,6 +3,8 @@ package config
 import com.typesafe.config.ConfigFactory
 import com.uchuhimo.konf.ConfigSpec
 import com.uchuhimo.konf.source.hocon.HoconSource
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 import org.http4k.cloudnative.env.Secret
 import org.jetbrains.exposed.sql.Database
@@ -48,20 +50,22 @@ object AppLoader {
     }
 
     fun migrateDatabase(cfg: DatabaseConfig): Database {
-        //val cl = Class.forName(cfg.driver).classLoader
-        val password = cfg.password.map { secret -> secret.use { pw -> pw } }.orElse("")
+        val password =
+            cfg.password.map { it.use { pw -> pw } }.orElse("")
+
         Flyway.configure().dataSource(
             cfg.url,
             cfg.user,
             password
         ).load().migrate()
 
-        return Database.connect( // TODO: use connection pool (hikari)
-            url = cfg.url,
-            driver = cfg.driver,
-            user = cfg.user,
-            password = password
-        )
+        val hikariCfg = HikariConfig()
+        hikariCfg.driverClassName = cfg.driver
+        hikariCfg.jdbcUrl = cfg.url
+        hikariCfg.username = cfg.user
+        hikariCfg.password = password
+        hikariCfg.maximumPoolSize = 3 // connections = ((core_count * 2) + effective_spindle_count)
+        return Database.connect(HikariDataSource(hikariCfg))
     }
 
     private fun buildConfig(configPath: String): com.uchuhimo.konf.Config {
@@ -70,7 +74,8 @@ object AppLoader {
         config.addSpec(DatabaseSpec)
         config.addSpec(AuthSpec)
 
-        val source = HoconSource(ConfigFactory.parseResources(configPath).resolve().root()) //TODO: report bug back to konf!
+        val source =
+            HoconSource(ConfigFactory.parseResources(configPath).resolve().root()) //TODO: report bug back to konf!
         return config.from.hocon.config.withSource(source)
     }
 

@@ -16,6 +16,7 @@ object WeightService {
 
     val weightLens = Body.auto<List<Weight>>().toLens()
     val saveWeightLens = Body.auto<SaveWeight>().toLens()
+    val putWeightLens = Body.auto<Weight>().toLens()
 
     private inline fun handleWithClaims(request: HttpMessage, handler: (claims: JwtClaims) -> Response): Response {
         val claims = JwtClaims.parse(request.header("x-jwt-claims"))
@@ -54,10 +55,23 @@ object WeightService {
             }
         }
 
+        val putHandler: HttpHandler = authFilter.then { request ->
+            handleWithClaims(request) { claims ->
+                val weight = putWeightLens(request)
+                if(weight.userId == claims.subject) {
+                    val id = weightRepo.upsert(weight)
+                    Response(Status.OK).body(id.toString())
+                } else {
+                    Response(Status.UNAUTHORIZED)
+                }
+            }
+        }
+
         return routes(
             "/api/weights" bind Method.GET to getHandler,
             "/api/weights/{id}" bind Method.DELETE to deleteHandler,
-            "/api/weights" bind Method.POST to postHandler
+            "/api/weights" bind Method.POST to postHandler,
+            "/api/weights" bind Method.PUT to putHandler
         )
 
     }

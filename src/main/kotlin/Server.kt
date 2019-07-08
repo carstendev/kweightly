@@ -6,6 +6,7 @@ import org.http4k.cloudnative.Http4kK8sServer
 import org.http4k.server.SunHttp
 import org.jetbrains.exposed.sql.Database
 import service.*
+import java.util.*
 
 object App : Logging {
 
@@ -23,6 +24,8 @@ object App : Logging {
 }
 
 fun main() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC")) // force timezone to utc!
+
     val cfg = AppLoader("application.conf")
     val db = AppLoader.migrateDatabase(cfg.dbConfig)
     App(cfg, db).start().block()

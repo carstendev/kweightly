@@ -22,6 +22,7 @@ dependencies {
     compile 'com.uchuhimo:konf:0.13.3' // config loading
 
     compile 'org.jetbrains.exposed:exposed:0.15.1' // database access
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.3.1'
     compile "com.h2database:h2:1.4.199"
     compile "org.postgresql:postgresql:42.2.2"
 
