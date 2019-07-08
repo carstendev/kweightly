@@ -6,8 +6,10 @@ import model.Weight
 import org.http4k.core.*
 import org.http4k.format.Jackson.auto
 import org.http4k.routing.bind
+import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.jose4j.jwt.JwtClaims
+import java.util.*
 
 
 object WeightService {
@@ -18,7 +20,7 @@ object WeightService {
     private inline fun handleWithClaims(request: HttpMessage, handler: (claims: JwtClaims) -> Response): Response {
         val claims = JwtClaims.parse(request.header("x-jwt-claims"))
         return claims?.let {
-            handler(it)
+            handler(it).header("Content-Type", ContentType.APPLICATION_JSON.value)
         } ?: Response(Status.UNAUTHORIZED)
     }
 
@@ -28,8 +30,19 @@ object WeightService {
             handleWithClaims(request) { claims ->
                 weightLens(
                     weightRepo.findAllByUserId(claims.subject),
-                    Response(Status.OK).header("Content-Type", ContentType.APPLICATION_JSON.value)
+                    Response(Status.OK)
                 )
+            }
+        }
+
+        val deleteHandler: HttpHandler = authFilter.then { request ->
+            handleWithClaims(request) { claims ->
+                Optional.ofNullable(request.path("id"))
+                    .flatMap { Optional.ofNullable(it.toLongOrNull()) }
+                    .map {
+                        val result = weightRepo.delete(it, claims.subject)
+                        Response(Status.OK).body(result.toString())
+                    }.orElse(Response(Status.BAD_REQUEST))
             }
         }
 
@@ -43,6 +56,7 @@ object WeightService {
 
         return routes(
             "/api/user/weights" bind Method.GET to getHandler,
+            "/api/user/weights/{id}" bind Method.DELETE to deleteHandler,
             "/api/user/weights" bind Method.POST to postHandler
         )
 

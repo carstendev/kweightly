@@ -4,11 +4,8 @@ package database
 import model.SaveWeight
 import model.Weight
 import org.apache.logging.log4j.kotlin.Logging
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 
@@ -29,6 +26,14 @@ class WeightRepository(private val db: Database) : Logging {
                 it[weight] = newWeight.weight
                 it[comment] = newWeight.comment
             } get WeightTable.id
+        }
+    }
+
+    fun delete(id: Long, userId: String): Int {
+        return transaction(db) {
+            WeightTable.deleteWhere {
+                WeightTable.id eq id and (WeightTable.userId eq userId)
+            }
         }
     }
 
