@@ -1,5 +1,6 @@
 package service
 
+import database.UnauthorizedException
 import database.WeightRepository
 import model.SaveWeight
 import model.Weight
@@ -68,8 +69,12 @@ object WeightService {
             handleWithClaims(setOf(Permission.AddWeights), request) { claims ->
                 val weight = putWeightLens(request)
                 if (weight.userId == claims.subject) {
-                    val id = weightRepo.upsert(weight)
-                    Response(Status.OK).body(id.toString())
+                    try {
+                        weightRepo.upsert(weight)
+                        Response(Status.NO_CONTENT)
+                    } catch (e: UnauthorizedException) {
+                        Response(Status.UNAUTHORIZED)
+                    }
                 } else {
                     Response(Status.UNAUTHORIZED)
                 }

@@ -33,7 +33,11 @@ class WeightRepository(private val db: Database) : Logging {
 
     fun upsert(weightToUpsert: Weight): Long {
         return transaction(db) {
-            if (WeightTable.select(WeightTable.id eq weightToUpsert.id).empty()) {
+            val userIds = WeightTable
+                .select(WeightTable.id eq weightToUpsert.id)
+                .map { it[WeightTable.userId] }
+
+            if (userIds.isEmpty()) {
 
                 WeightTable.insert {
                     it[id] = weightToUpsert.id
@@ -44,6 +48,10 @@ class WeightRepository(private val db: Database) : Logging {
                 } get WeightTable.id
 
             } else {
+                // make sure the userId is the same
+                if(userIds.first() != weightToUpsert.userId)
+                    throw UnauthorizedException("Users can only change their own resources!")
+
                 WeightTable.update({ WeightTable.id eq weightToUpsert.id }) {
                     it[weight] = weightToUpsert.weight
                     it[recordedAt] = DateTime(weightToUpsert.recordedAt.toEpochMilli(), DateTimeZone.UTC)
@@ -79,3 +87,5 @@ class WeightRepository(private val db: Database) : Logging {
     }
 
 }
+
+class UnauthorizedException(msg: String) : Exception(msg)
