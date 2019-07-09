@@ -18,17 +18,26 @@ object WeightService {
     val saveWeightLens = Body.auto<SaveWeight>().toLens()
     val putWeightLens = Body.auto<Weight>().toLens()
 
-    private inline fun handleWithClaims(request: HttpMessage, handler: (claims: JwtClaims) -> Response): Response {
+    private inline fun handleWithClaims(
+        requiredPermissions: Set<Permission>,
+        request: HttpMessage,
+        handler: (claims: JwtClaims) -> Response
+    ): Response {
         val claims = JwtClaims.parse(request.header("x-jwt-claims"))
         return claims?.let {
-            handler(it).header("Content-Type", ContentType.APPLICATION_JSON.value)
+            val permissions = Permission.extractPermissions(it)
+            if (permissions.containsAll(requiredPermissions)) {
+                handler(it).header("Content-Type", ContentType.APPLICATION_JSON.value)
+            } else {
+                Response(Status.UNAUTHORIZED)
+            }
         } ?: Response(Status.UNAUTHORIZED)
     }
 
     operator fun invoke(weightRepo: WeightRepository, authFilter: AuthFilter): HttpHandler {
 
         val getHandler: HttpHandler = authFilter.then { request ->
-            handleWithClaims(request) { claims ->
+            handleWithClaims(setOf(Permission.ReadWeights), request) { claims ->
                 weightLens(
                     weightRepo.findAllByUserId(claims.subject),
                     Response(Status.OK)
@@ -37,7 +46,7 @@ object WeightService {
         }
 
         val deleteHandler: HttpHandler = authFilter.then { request ->
-            handleWithClaims(request) { claims ->
+            handleWithClaims(setOf(Permission.DeleteWeights), request) { claims ->
                 Optional.ofNullable(request.path("id"))
                     .flatMap { Optional.ofNullable(it.toLongOrNull()) }
                     .map {
@@ -48,7 +57,7 @@ object WeightService {
         }
 
         val postHandler: HttpHandler = authFilter.then { request ->
-            handleWithClaims(request) { claims ->
+            handleWithClaims(setOf(Permission.AddWeights), request) { claims ->
                 val newWeight = saveWeightLens(request)
                 val newId = weightRepo.insert(newWeight, claims.subject)
                 Response(Status.OK).body(newId.toString())
@@ -56,9 +65,9 @@ object WeightService {
         }
 
         val putHandler: HttpHandler = authFilter.then { request ->
-            handleWithClaims(request) { claims ->
+            handleWithClaims(setOf(Permission.AddWeights), request) { claims ->
                 val weight = putWeightLens(request)
-                if(weight.userId == claims.subject) {
+                if (weight.userId == claims.subject) {
                     val id = weightRepo.upsert(weight)
                     Response(Status.OK).body(id.toString())
                 } else {
