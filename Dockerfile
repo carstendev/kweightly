@@ -1,4 +1,4 @@
-ARG VERSION=8
+ARG VERSION=11
 
 FROM openjdk:${VERSION}-jdk as BUILD
 

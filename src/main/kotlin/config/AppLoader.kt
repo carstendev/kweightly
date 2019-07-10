@@ -63,7 +63,10 @@ object AppLoader {
         hikariCfg.jdbcUrl = cfg.url
         hikariCfg.username = cfg.user
         hikariCfg.password = password
-        hikariCfg.maximumPoolSize = 3 // connections = ((core_count * 2) + effective_spindle_count)
+
+        val cores = Runtime.getRuntime().availableProcessors()
+        hikariCfg.maximumPoolSize = (cores * 2) + 1 // connections = ((core_count * 2) + effective_spindle_count)
+
         return Database.connect(HikariDataSource(hikariCfg))
     }
 
@@ -72,9 +75,7 @@ object AppLoader {
         config.addSpec(ServerSpec)
         config.addSpec(DatabaseSpec)
         config.addSpec(AuthSpec)
-
-        val source =
-            HoconSource(ConfigFactory.parseResources(configPath).resolve().root()) //TODO: report bug back to konf!
+        val source = HoconSource(ConfigFactory.parseResources(configPath).resolve().root())
         return config.from.hocon.config.withSource(source)
     }
 

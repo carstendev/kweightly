@@ -12,6 +12,8 @@ object App : Logging {
 
     operator fun invoke(cfg: Config, db: Database): Http4kK8sServer {
         logger.info(cfg.toString())
+        logger.info("Available processors: ${Runtime.getRuntime().availableProcessors()}")
+        logger.info("Max available memory: ${Runtime.getRuntime().maxMemory()} bytes")
 
         val authFilter = AuthFilter(AppLoader.tokenAuthService(cfg.authConfig))
         val weightHandler = WeightService(WeightRepository(db), authFilter)
