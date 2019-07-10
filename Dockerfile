@@ -13,4 +13,4 @@ WORKDIR /bin/runner
 
 EXPOSE 9002 9003
 
-CMD ["java", "-XX:MaxRAMFraction=1", "-jar","run.jar"]
+CMD ["java", "-XX:MaxRAMPercentage=100", "-jar","run.jar"]
