@@ -42,9 +42,6 @@ jar {
     manifest {
         attributes 'Main-Class': 'ServerKt'
     }
-    archiveFileName = provider {
-        'kweightly'
-    }
 }
 
 compileKotlin {

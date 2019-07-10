@@ -8,7 +8,7 @@ RUN ./gradlew --no-daemon shadowJar
 
 FROM azul/zulu-openjdk-alpine:${VERSION}-jre
 
-COPY --from=BUILD /src/build/libs/kweightly-all.jar /bin/runner/run.jar
+COPY --from=BUILD /src/build/libs/kweightly.jar /bin/runner/run.jar
 WORKDIR /bin/runner
 
 EXPOSE 9002 9003
