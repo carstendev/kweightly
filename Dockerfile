@@ -1,12 +1,13 @@
 ARG VERSION=11
 
-FROM openjdk:${VERSION}-jdk as BUILD
+FROM azul/zulu-openjdk-alpine:${VERSION} as BUILD
+
 
 COPY . /src
 WORKDIR /src
 RUN ./gradlew --no-daemon shadowJar
 
-FROM adoptopenjdk/openjdk-${VERSION}:alpine-jre
+FROM azul/zulu-openjdk-alpine:${VERSION}-jre
 
 COPY --from=BUILD /src/build/libs/kweightly-all.jar /bin/runner/run.jar
 WORKDIR /bin/runner
