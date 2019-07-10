@@ -2,7 +2,6 @@ ARG VERSION=11
 
 FROM azul/zulu-openjdk-alpine:${VERSION} as BUILD
 
-
 COPY . /src
 WORKDIR /src
 RUN ./gradlew --no-daemon shadowJar
