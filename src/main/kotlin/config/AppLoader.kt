@@ -63,10 +63,7 @@ object AppLoader {
         hikariCfg.jdbcUrl = cfg.url
         hikariCfg.username = cfg.user
         hikariCfg.password = password
-
-        val cores = Runtime.getRuntime().availableProcessors()
-        hikariCfg.maximumPoolSize = (cores * 2) + 1 // connections = ((core_count * 2) + effective_spindle_count)
-
+        hikariCfg.maximumPoolSize = 3 // connections = ((core_count * 2) + effective_spindle_count)
         return Database.connect(HikariDataSource(hikariCfg))
     }
 
