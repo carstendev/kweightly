@@ -41,6 +41,7 @@ dependencies {
 jar {
     manifest {
         attributes 'Main-Class': 'ServerKt'
+        attributes 'Multi-Release': true
     }
 }
 
