@@ -15,9 +15,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
  */
 object HealthService {
 
-    operator fun invoke(cfg: Config, db: Database): HttpHandler {
+    operator fun invoke(cfg: Config, db: Database, metricService: MetricService): HttpHandler {
         return Health(
             "/config" bind Method.GET to { Response(Status.OK).body(cfg.toString()) },
+            "/metrics" bind Method.GET to metricService.getHandler,
             checks = listOf(
                 DatabaseCheck(db)
             )

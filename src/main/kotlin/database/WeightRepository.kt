@@ -1,6 +1,7 @@
 package database
 
 
+import io.micrometer.core.instrument.Metrics
 import model.SaveWeight
 import model.Weight
 import org.apache.logging.log4j.kotlin.Logging
@@ -21,7 +22,13 @@ object WeightTable : Table() {
 
 class WeightRepository(private val db: Database) : Logging {
 
+    private val dbInsertCounter = Metrics.counter("database.insert","db", "weight")
+    private val dbUpsertCounter = Metrics.counter("database.upsert","db", "weight")
+    private val dbDeleteCounter = Metrics.counter("database.delete","db", "weight")
+    private val dbFindCounter = Metrics.counter("database.find","db", "weight")
+
     fun insert(newWeight: SaveWeight, userId: String): Long {
+        dbInsertCounter.increment()
         return transaction(db) {
             WeightTable.insert {
                 it[WeightTable.userId] = userId
@@ -32,6 +39,7 @@ class WeightRepository(private val db: Database) : Logging {
     }
 
     fun upsert(weightToUpsert: Weight): Long {
+        dbUpsertCounter.increment()
         return transaction(db) {
             val userIds = WeightTable
                 .select(WeightTable.id eq weightToUpsert.id)
@@ -63,6 +71,7 @@ class WeightRepository(private val db: Database) : Logging {
     }
 
     fun delete(id: Long, userId: String): Int {
+        dbDeleteCounter.increment()
         return transaction(db) {
             WeightTable.deleteWhere {
                 WeightTable.id eq id and (WeightTable.userId eq userId)
@@ -71,6 +80,7 @@ class WeightRepository(private val db: Database) : Logging {
     }
 
     fun findAllByUserId(userId: String): List<Weight> {
+        dbFindCounter.increment()
         return transaction(db) {
             WeightTable
                 .select(WeightTable.userId eq userId)
