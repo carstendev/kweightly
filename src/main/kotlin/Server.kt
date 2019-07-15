@@ -5,19 +5,21 @@ import io.micrometer.core.instrument.Metrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.apache.logging.log4j.kotlin.Logging
+import org.apache.logging.log4j.kotlin.logger
 import org.http4k.cloudnative.Http4kK8sServer
 import org.http4k.core.Method
 import org.http4k.core.then
 import org.http4k.filter.MetricFilters
 import org.http4k.routing.bind
 import org.http4k.routing.routes
-import org.http4k.server.SunHttp
+import org.http4k.server.Jetty
 import org.jetbrains.exposed.sql.Database
 import service.AuthFilter
 import service.HealthService
 import service.MetricService
 import service.WeightService
 import java.util.*
+import kotlin.concurrent.thread
 
 
 object App : Logging {
@@ -46,8 +48,8 @@ object App : Logging {
             .then(MetricFilters.Server.RequestTimer(prometheusRegistry))
             .then(appRoutes)
 
-        val mainApp = SunHttp(cfg.serverConfig.servicePort).toServer(app)
-        val healthApp = SunHttp(cfg.serverConfig.healthPort).toServer(HealthService(cfg, db, metricHandler))
+        val mainApp = Jetty(cfg.serverConfig.servicePort).toServer(app)
+        val healthApp = Jetty(cfg.serverConfig.healthPort).toServer(HealthService(cfg, db, metricHandler))
 
         return Http4kK8sServer(mainApp, healthApp)
     }
@@ -55,9 +57,20 @@ object App : Logging {
 }
 
 fun main() {
+    val logger = logger("Server")
     TimeZone.setDefault(TimeZone.getTimeZone("UTC")) // force timezone to utc!
 
     val cfg = AppLoader("application.conf")
-    val db = AppLoader.migrateDatabase(cfg.dbConfig)
-    App(cfg, db).start().block()
+    val dataSource = AppLoader.migrateDatabase(cfg.dbConfig)
+    val app = App(cfg, Database.connect(dataSource)).start()
+
+    Runtime.getRuntime().addShutdownHook(
+        thread(start = false, isDaemon = false, name = "ShutdownHookThread") {
+            logger.info("Shutdown hook executed...")
+            dataSource.close()
+            app.close()
+            Metrics.globalRegistry.close()
+            logger.info("Shutdown hook finished...")
+        }
+    )
 }

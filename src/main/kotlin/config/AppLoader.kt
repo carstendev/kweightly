@@ -7,7 +7,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 import org.http4k.cloudnative.env.Secret
-import org.jetbrains.exposed.sql.Database
 import service.JWT
 import service.TokenAuthService
 import service.TokenAuthServiceImpl
@@ -49,7 +48,7 @@ object AppLoader {
         )
     }
 
-    fun migrateDatabase(cfg: DatabaseConfig): Database {
+    fun migrateDatabase(cfg: DatabaseConfig): HikariDataSource {
         val password =
             cfg.password.map { it.use { pw -> pw } }.orElse("")
 
@@ -64,7 +63,8 @@ object AppLoader {
         hikariCfg.username = cfg.user
         hikariCfg.password = password
         hikariCfg.maximumPoolSize = 3 // connections = ((core_count * 2) + effective_spindle_count)
-        return Database.connect(HikariDataSource(hikariCfg))
+
+        return HikariDataSource(hikariCfg)
     }
 
     private fun buildConfig(configPath: String): com.uchuhimo.konf.Config {
