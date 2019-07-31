@@ -11,34 +11,36 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '1.3.41'
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '1.3.41'
 
-    compile group: "org.http4k", name: "http4k-core", version: "3.162.0"
-    compile group: "org.http4k", name: "http4k-server-jetty", version: "3.162.0"
-    compile group: "org.http4k", name: "http4k-client-apache", version: "3.162.0"
-    compile group: "org.http4k", name: "http4k-cloudnative", version: "3.162.0"
-    compile group: "org.http4k", name: "http4k-security-oauth", version: "3.162.0"
-    compile group: "org.http4k", name: "http4k-metrics-micrometer", version: "3.162.0"
-    compile group: "org.http4k", name: "http4k-resilience4j", version: "3.162.0"
+    implementation group: "org.http4k", name: "http4k-core", version: "3.168.0"
+    implementation group: "org.http4k", name: "http4k-server-jetty", version: "3.168.0"
+    implementation group: "org.http4k", name: "http4k-cloudnative", version: "3.168.0"
+    implementation group: "org.http4k", name: "http4k-security-oauth", version: "3.168.0"
+    implementation group: "org.http4k", name: "http4k-metrics-micrometer", version: "3.168.0"
+    implementation group: "org.http4k", name: "http4k-resilience4j", version: "3.168.0"
 
-    compile 'io.micrometer:micrometer-registry-prometheus:1.2.0'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.2.0'
 
-    compile group: 'com.typesafe', name: 'config', version: '1.3.4'
-    compile 'com.uchuhimo:konf:0.13.3' // config loading
+    implementation group: 'com.typesafe', name: 'config', version: '1.3.4'
+    implementation 'com.uchuhimo:konf:0.13.3' // config loading
 
-    compile 'org.jetbrains.exposed:exposed:0.15.1' // database access
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.3.1'
-    compile "com.h2database:h2:1.4.199"
-    compile "org.postgresql:postgresql:42.2.2"
+    implementation 'org.jetbrains.exposed:exposed:0.15.1' // database access
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '3.3.1'
+    implementation "org.postgresql:postgresql:42.2.2"
 
-    compile group: 'org.flywaydb', name: 'flyway-core', version: '6.0.0-beta2' // db migrations
+    implementation group: 'org.flywaydb', name: 'flyway-core', version: '6.0.0-beta2' // db migrations
 
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j18-impl', version: '2.12.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api-kotlin', version: '1.0.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j18-impl', version: '2.12.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api-kotlin', version: '1.0.0'
 
-    compile group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5' // jwt handling
+    implementation group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5' // jwt handling
+
+    testImplementation "com.h2database:h2:1.4.199"
+    testImplementation group: "org.http4k", name: "http4k-client-apache", version: "3.168.0"
+    testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.3.2'
 }
 
 // tell the jar which class to startup in.
@@ -57,9 +59,6 @@ shadowJar {
     }
 }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+test {
+    useJUnitPlatform()
 }

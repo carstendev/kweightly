@@ -7,12 +7,9 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.apache.logging.log4j.kotlin.Logging
 import org.apache.logging.log4j.kotlin.logger
 import org.http4k.cloudnative.Http4kK8sServer
-import org.http4k.core.Method
 import org.http4k.core.then
 import org.http4k.filter.MetricFilters
 import org.http4k.filter.ResilienceFilters
-import org.http4k.routing.bind
-import org.http4k.routing.routes
 import org.http4k.server.Jetty
 import org.jetbrains.exposed.sql.Database
 import service.AuthFilter
@@ -30,25 +27,18 @@ object App : Logging {
         logger.info("Available processors: ${Runtime.getRuntime().availableProcessors()}")
         logger.info("Max available memory: ${Runtime.getRuntime().maxMemory()} bytes")
 
-        val authFilter = AuthFilter(AppLoader.tokenAuthService(cfg.authConfig))
-        val weightHandler = WeightService(WeightRepository(db), authFilter)
-
         val prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         Metrics.addRegistry(prometheusRegistry) // register global registry
 
         val metricHandler = MetricService(prometheusRegistry)
         val rateLimiter = ResilienceFilters.RateLimit() // default rate limiter -> 50 request per 5 sec
 
-        val appRoutes = routes(
-            "/api/weights" bind Method.GET to rateLimiter(weightHandler.getHandler),
-            "/api/weights/{id}" bind Method.DELETE to rateLimiter(weightHandler.deleteHandler),
-            "/api/weights" bind Method.POST to rateLimiter(weightHandler.postHandler),
-            "/api/weights" bind Method.PUT to rateLimiter(weightHandler.putHandler)
-        )
+        val authFilter = AuthFilter(AppLoader.tokenAuthService(cfg.authConfig))
+        val weightService = WeightService(WeightRepository(db), authFilter)
 
         val app = MetricFilters.Server.RequestCounter(prometheusRegistry)
             .then(MetricFilters.Server.RequestTimer(prometheusRegistry))
-            .then(appRoutes)
+            .then(rateLimiter(weightService))
 
         val mainApp = Jetty(cfg.serverConfig.servicePort).toServer(app)
         val healthApp = Jetty(cfg.serverConfig.healthPort).toServer(HealthService(cfg, db, metricHandler))
