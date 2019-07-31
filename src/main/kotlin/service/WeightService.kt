@@ -12,7 +12,7 @@ import org.jose4j.jwt.JwtClaims
 import java.util.*
 
 
-class WeightService(weightRepo: WeightRepository, authFilter: AuthFilter) {
+class WeightService(weightRepo: WeightRepository, authFilter: Filter) {
 
     private val weightLens = Body.auto<List<Weight>>().toLens()
     private val saveWeightLens = Body.auto<SaveWeight>().toLens()
