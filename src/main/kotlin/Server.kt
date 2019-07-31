@@ -10,6 +10,7 @@ import org.http4k.cloudnative.Http4kK8sServer
 import org.http4k.core.Method
 import org.http4k.core.then
 import org.http4k.filter.MetricFilters
+import org.http4k.filter.ResilienceFilters
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Jetty
@@ -36,12 +37,13 @@ object App : Logging {
         Metrics.addRegistry(prometheusRegistry) // register global registry
 
         val metricHandler = MetricService(prometheusRegistry)
+        val rateLimiter = ResilienceFilters.RateLimit() // default rate limiter -> 50 request per 5 sec
 
         val appRoutes = routes(
-            "/api/weights" bind Method.GET to weightHandler.getHandler,
-            "/api/weights/{id}" bind Method.DELETE to weightHandler.deleteHandler,
-            "/api/weights" bind Method.POST to weightHandler.postHandler,
-            "/api/weights" bind Method.PUT to weightHandler.putHandler
+            "/api/weights" bind Method.GET to rateLimiter(weightHandler.getHandler),
+            "/api/weights/{id}" bind Method.DELETE to rateLimiter(weightHandler.deleteHandler),
+            "/api/weights" bind Method.POST to rateLimiter(weightHandler.postHandler),
+            "/api/weights" bind Method.PUT to rateLimiter(weightHandler.putHandler)
         )
 
         val app = MetricFilters.Server.RequestCounter(prometheusRegistry)
