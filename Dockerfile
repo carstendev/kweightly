@@ -4,7 +4,7 @@ FROM azul/zulu-openjdk-alpine:${VERSION} as BUILD
 
 COPY . /src
 WORKDIR /src
-RUN ./gradlew test --info
+RUN ./gradlew test
 RUN ./gradlew --no-daemon shadowJar
 
 FROM azul/zulu-openjdk-alpine:${VERSION}-jre
