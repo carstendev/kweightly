@@ -39,7 +39,6 @@ dependencies {
     implementation group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5' // jwt handling
 
     testImplementation "com.h2database:h2:1.4.199"
-    testImplementation group: "org.http4k", name: "http4k-client-apache", version: "3.168.0"
     testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.3.2'
 }
 
